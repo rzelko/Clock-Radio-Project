@@ -15,7 +15,8 @@ Essentially, my project is a touchscreen clock radio (FM Stereo) with MP3 player
 
 HARDWARE MODIFICATIONS MADE:
   1. Due to conflicts with Music Maker FeatherWing, on the FeatherWing TFT:
-      ```DC was jumpered to A1
+      
+   ```DC was jumpered to A1
       TCS was jumpered to A2
       RCS was jumpered to A3
       SCS was jumpered to A4```
