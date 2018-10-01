@@ -21,5 +21,5 @@ HARDWARE MODIFICATIONS MADE:
       ```SCS was jumpered to A4```
   2. Due to conflicts with the M0 VBATPIN located on A7 (aka "D9"), on the Music Maker FeatherWing:
       `DREQ on D9 was jumpered to D11`
-  3. Jumpered INT on TFT FeatherWing to A5 to serve as an interrupt (code pending)
+  3. Jumpered IRQ pin on TFT FeatherWing to A5 to serve as an interrupt (code pending)
   4. Wired a voltage divider from USB pin to A0 to detect when USB/power adapter is present (USB--10Kohm--A0--10Kohm--GND)
