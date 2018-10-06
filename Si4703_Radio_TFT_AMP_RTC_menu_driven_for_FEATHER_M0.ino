@@ -142,7 +142,7 @@ Adafruit_TPA2016 audioamp = Adafruit_TPA2016();                     //create ins
 Adafruit_VS1053_FilePlayer musicPlayer = 
   Adafruit_VS1053_FilePlayer(VS1053_RESET, VS1053_CS, VS1053_DCS, VS1053_DREQ, CARDCS);
 
-int MP3volume = 70;
+int MP3volume = 84;
 
 #define BUFFER_LEN 50
 char* myAlbum_1_Track[14] = {"01.mp3", "02.mp3", "03.mp3","04.mp3","05.mp3","06.mp3","07.mp3","08.mp3","09.mp3","10.mp3","11.mp3","12.mp3","13.mp3"};
@@ -154,6 +154,7 @@ char printMP3Buffer[BUFFER_LEN];
 char printArtistBuffer[BUFFER_LEN];
 int MP3BufferLength;
 int ArtistBufferLength;
+int playMusicState = 0;
 
 ////////////////////////////////////////////  WiFi DEFINITIONS ////////////////////////////////////////////
 
@@ -236,8 +237,10 @@ void setup(void) {
 //  }
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ),tsControlInt,CHANGE);
 
-  currentScreen = 1;
-  startMainScreen();
+//  currentScreen = 1;
+//  startMainScreen();
+  currentScreen = 3;
+  startMP3Screen();
 }  
 
 ////////////////////////////////////////          ISR          /////////////////////////////////////////////
@@ -756,24 +759,28 @@ void setup(void) {
           Serial.println("Could not open file: ");Serial.print(nowPlaying);
           while (1);
     }
-    while (musicPlayer.playingMusic|| musicPlayer.stopped() ) {
+    while (musicPlayer.playingMusic){
 
-////      interrupts();
-////      Serial.print(".");
-////      delay(1000);
-//      printTime();
-      delay(1000);
+//      interrupts();
+//      Serial.print(".");
+//      delay(1000);
+      printInLoop();
+
 //      controlMP3();
-      break;
+//      break;
     }
+    playMusicState = 0;
     controlMP3();
   }
   
-    
+  void printInLoop(){
+    Serial.print(".");
+    delay (1000);  
+  }
 
   void controlMP3(){                                                //control MP3 screen
     Serial.println("MP3 control started");
-//    while(musicPlayer.playingMusic || musicPlayer.stopped() ) {
+    if(musicPlayer.playingMusic || musicPlayer.stopped() ) {
       
       TS_Point p = ts.getPoint();                                   
       DateTime now = rtc.now();                                       //get current time and date
@@ -797,12 +804,12 @@ void setup(void) {
         if(horz>1720 && horz<2280){                                   //play track
           if(vert>-2000 && vert<-1580){
             delay(50);
-            musicPlayer.useInterrupt(
-            VS1053_FILEPLAYER_PIN_INT);           // DREQ int
+//            musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);           // DREQ int
 //            for (myAlbum_1_Index = 1; myAlbum_1_Index < 13; myAlbum_1_Index++){ 
               nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+              playMusicState = 1;
               getLastTouch();
-              playMP3Tracks();
+//              playMP3Tracks();
 //            }            
           }
         }
@@ -950,7 +957,7 @@ void setup(void) {
           }
         }
       }
-//    }
+    }
   }
   void startWebRadioScreen(){                                        
     ampOn();
@@ -1405,7 +1412,7 @@ TS_Point getLastTouch(){    //In theory, this function should work without the t
           tft.setTextSize(2);
           tft.print(dateTimeBuffer);
           delay(1000);
-//          checkCharge();
+          checkCharge();
 //          noInterrupts();
         } while (now.second() == 0);
         break;
@@ -1430,29 +1437,34 @@ TS_Point getLastTouch(){    //In theory, this function should work without the t
     return;
   }
 
-void loop(void) {
- 
-    switch (currentScreen){
-      case 1:
-        controlMainScreen();
-        break;
-    
-      case 2:
-        controlStereo();
-        break;
-    
-      case 3:
-        controlMP3();
-        break;
-  
-      case 4:
-        controlWebRadio();
-        break;
-  
-      case 5:
-        controlMainScreen();
-        break;
-  } 
+void loop() {
+
+ currentScreen = 3;
+ controlMP3();
+ if (playMusicState == 1){
+  playMP3Tracks();
+ }
+//    switch (currentScreen){
+//      case 1:
+//        controlMainScreen();
+//        break;
+//    
+//      case 2:
+//        controlStereo();
+//        break;
+//    
+//      case 3:
+//        controlMP3();
+//        break;
+//  
+//      case 4:
+//        controlWebRadio();
+//        break;
+//  
+//      case 5:
+//        controlMainScreen();
+//        break;
+//  } 
 }
   
   
