@@ -97,8 +97,10 @@ int currentScreen;                                                  //var to ass
 long lineColor = HX8357_RED;
 long textColor = HX8357_ORANGE;
 
-#define TOUCH_IRQ 19//A5                                            // A5 wired to IRQ on TFT to serve as external interrupt
+#define TOUCH_IRQ 11//A5                                            // A5 wired to IRQ on TFT to serve as external interrupt
 volatile bool tftNotTouched = true;                                 // start out untouched for interrupt status
+boolean lastTouch = LOW;                                            // variable containing previous button state
+boolean currentTouch = LOW;                                         // variable containing current button state
 
 //////////////////////////////////////////  Si4703 DEFINITIONS  ///////////////////////////////////////////////////
 
@@ -237,19 +239,28 @@ void setup(void) {
 //  }
   attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ),tsControlInt,CHANGE);
 
-//  currentScreen = 1;
-//  startMainScreen();
-  currentScreen = 3;
-  startMP3Screen();
+  currentScreen = 1;
+  startMainScreen();
+//  currentScreen = 3;
+//  startMP3Screen();
 }  
 
 ////////////////////////////////////////          ISR          /////////////////////////////////////////////
   
   void tsControlInt(){
-    tftNotTouched = false;                                              //under development
+    tftNotTouched = false;                                          //under development
   }
   
 ////////////////////////////////////////        FUNCTIONS       /////////////////////////////////////////////
+  
+  boolean debounce(boolean last){                                   //debounce touchscreen touches      
+    boolean current = digitalRead(TOUCH_IRQ);                       //read touchscreen state from interrupt pin
+    if (last != current){
+      delay (5);
+      current = digitalRead(TOUCH_IRQ);
+    }
+    return current;
+  }
 
   void regDump() {                                                  //serial print M0 register
     
@@ -752,7 +763,9 @@ void setup(void) {
   }
   
   void playMP3Tracks(){
-//    interrupts();
+//    noInterrupts();
+    getLastTouch();
+    delay(1000);
     musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);           // DREQ int
     printMP3Tracks();
     if (! musicPlayer.startPlayingFile(nowPlaying)) {
@@ -763,14 +776,15 @@ void setup(void) {
 
 //      interrupts();
 //      Serial.print(".");
-//      delay(1000);
-      printInLoop();
+      playMusicState = 0;
+      delay(1000);
+//      printInLoop();
 
-//      controlMP3();
+      controlMP3();
 //      break;
     }
-    playMusicState = 0;
-    controlMP3();
+//    playMusicState = 0;
+//    controlMP3();
   }
   
   void printInLoop(){
@@ -803,29 +817,35 @@ void setup(void) {
       if (ts.touched()) {                                             //if touch is detected
         if(horz>1720 && horz<2280){                                   //play track
           if(vert>-2000 && vert<-1580){
-            delay(50);
+//            delay(50);
+            currentTouch = debounce(lastTouch);
+            if (lastTouch == LOW && currentTouch == HIGH){
 //            musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);           // DREQ int
 //            for (myAlbum_1_Index = 1; myAlbum_1_Index < 13; myAlbum_1_Index++){ 
               nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-              playMusicState = 1;
+              playMusicState = 1;  //added in lieu of calling playMP3Tracks from within this function
               getLastTouch();
-//              playMP3Tracks();
+//              playMP3Tracks(); //commented out to test if calling the function within controlMP3 prevents interrupt
 //            }            
+            }
+            lastTouch = LOW;                                          //reset touchscreen touch to low state
           }
         }
         if(horz>2480 && horz<2750){                                   //pause track
           if(vert>-2000 && vert<-1580){
             delay(50);
-            if (! musicPlayer.paused()) {
-              Serial.println("Paused");
-              musicPlayer.pausePlaying(true);
-            } else { 
-              Serial.println("Resumed");
-              musicPlayer.pausePlaying(false);
-            }
+            currentTouch = debounce(lastTouch);
+            if (lastTouch == LOW && currentTouch == HIGH){
+              if (! musicPlayer.paused()) {
+                Serial.println("Paused");
+                musicPlayer.pausePlaying(true);
+              } else { 
+                Serial.println("Resumed");
+                musicPlayer.pausePlaying(false);
+              }
             getLastTouch();
-//            clearTSBuffer();  
-              
+            }  
+            lastTouch = LOW;  
           }
         }
         if(horz>1280 && horz<1580){                                   //stop track
@@ -1439,32 +1459,35 @@ TS_Point getLastTouch(){    //In theory, this function should work without the t
 
 void loop() {
 
- currentScreen = 3;
- controlMP3();
- if (playMusicState == 1){
-  playMP3Tracks();
- }
-//    switch (currentScreen){
-//      case 1:
-//        controlMainScreen();
-//        break;
-//    
-//      case 2:
-//        controlStereo();
-//        break;
-//    
-//      case 3:
-//        controlMP3();
-//        break;
+// currentScreen = 3;
+//  if (playMusicState == 1){
+//  playMP3Tracks();
+// } else controlMP3();
 //  
-//      case 4:
-//        controlWebRadio();
-//        break;
-//  
-//      case 5:
-//        controlMainScreen();
-//        break;
-//  } 
+ 
+    switch (currentScreen){
+      case 1:
+        controlMainScreen();
+        break;
+    
+      case 2:
+        controlStereo();
+        break;
+    
+      case 3:
+        if (playMusicState == 1){ //testing whether or not calling playMP3Tracks from within contolMP3 is a problem
+          playMP3Tracks();
+        } else controlMP3();
+        break;
+  
+      case 4:
+        controlWebRadio();
+        break;
+  
+      case 5:
+        controlMainScreen();
+        break;
+  } 
 }
   
   
