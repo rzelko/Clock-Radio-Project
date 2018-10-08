@@ -160,7 +160,7 @@ void setup(void) {
 ////////////////////////////////////////          ISR          /////////////////////////////////////////////
   
   void tsControlInt(){
-    tftNotTouched = !tftNotTouched;                                          //under development
+    tftNotTouched = !tftNotTouched;
   }
   
 ////////////////////////////////////////        FUNCTIONS       /////////////////////////////////////////////
@@ -328,9 +328,8 @@ void setup(void) {
   //            delay(50);
               currentTouch = debounce(lastTouch);                       //debounced touch
               if (lastTouch == LOW && currentTouch == HIGH){
-  //            musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);           // DREQ int
   //            for (myAlbum_1_Index = 1; myAlbum_1_Index < 13; myAlbum_1_Index++){ 
-                tftNotTouched = true;
+//                tftNotTouched = true;
                 nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
                 playMusicState = 1;  //added in lieu of calling playMP3Tracks from within this function
                 getLastTouch();
@@ -362,9 +361,13 @@ void setup(void) {
           }
           if(horz>1280 && horz<1580){                                   //stop track
             if(vert>-2000 && vert<-1580){
-              delay(50);
-              musicPlayer.stopPlaying();
-              getLastTouch();
+//              delay(50);
+              currentTouch = debounce(lastTouch);                       //debounced touch
+              if (lastTouch == LOW && currentTouch == HIGH){
+                musicPlayer.stopPlaying();
+                getLastTouch();
+              }
+              lastTouch = LOW;
             }
           }
           if(horz>780 && horz<1100){                                   //right blank button
@@ -383,76 +386,80 @@ void setup(void) {
           }
           if(horz>2900 && horz<3200){                                   //next track
             if(vert>-2000 && vert<-1580){
-              delay(50);
-              musicPlayer.stopPlaying();
-              Serial.println("STOPPED");
-              if(myAlbum_1_Index<12){
-                myAlbum_1_Index ++;
-                nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-                printMP3Tracks();
-                getLastTouch();
-              } else myAlbum_1_Index = 0;
+//              delay(50);
+              currentTouch = debounce(lastTouch);                       //debounced touch
+              if (lastTouch == LOW && currentTouch == HIGH){
+                musicPlayer.stopPlaying();
+                Serial.println("STOPPED");
+                if(myAlbum_1_Index<12){
+                  myAlbum_1_Index ++;
+                  nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+                  printMP3Tracks();
+                  getLastTouch();
+                } else myAlbum_1_Index = 0;
+              }
+              lastTouch = LOW;
             }
           }
           if(horz>3350 && horz<3650){                                   //previous track
             if(vert>-2000 && vert<-1580){
-              delay(50);
-              if (myAlbum_1_Index>0){
-                myAlbum_1_Index --;
-                nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-                printMP3Tracks();
-                getLastTouch();
-              } else myAlbum_1_Index = 13; 
+//              delay(50);
+              currentTouch = debounce(lastTouch);                       //debounced touch
+              if (lastTouch == LOW && currentTouch == HIGH){
+                musicPlayer.stopPlaying();
+                Serial.println("STOPPED");
+                if (myAlbum_1_Index>0){
+                  myAlbum_1_Index --;
+                  nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+                  printMP3Tracks();
+                  getLastTouch();
+                } else myAlbum_1_Index = 13; 
+              }
+              lastTouch = LOW;
             }
           }
           if(horz>3350 && horz<3650){                                   //volume down
             if(vert>-1340 && vert<-840){
               Serial.println("volume down touched");
-              delay(50);
-              if (MP3volume < 100){
-                MP3volume=MP3volume+2;
-                tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
-                musicPlayer.setVolume(MP3volume,MP3volume);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
-                tft.print(MP3volume);                 //write volume
-                delay(100);
-                getLastTouch();
-              } else if (MP3volume >= 100){
-                  MP3volume = 100;
-                  tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+//              delay(50);
+              currentTouch = debounce(lastTouch);                       //debounced touch
+              if (lastTouch == LOW && currentTouch == HIGH){
+                if (MP3volume < 100){
+                  MP3volume=MP3volume+2;
+                  tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
                   musicPlayer.setVolume(MP3volume,MP3volume);
                   tft.setCursor(40, 208);
                   tft.setTextColor(textColor);
                   tft.setTextSize(2);
                   tft.print("Volume:    ");
                   tft.setTextColor(textColor);
+                  Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
                   tft.print(MP3volume);                 //write volume
+                  delay(100);
                   getLastTouch();
+                } else if (MP3volume >= 100){
+                    MP3volume = 100;
+                    tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+                    musicPlayer.setVolume(MP3volume,MP3volume);
+                    tft.setCursor(40, 208);
+                    tft.setTextColor(textColor);
+                    tft.setTextSize(2);
+                    tft.print("Volume:    ");
+                    tft.setTextColor(textColor);
+                    tft.print(MP3volume);                 //write volume
+                    getLastTouch();
+                }
               }
+              lastTouch = LOW;
             }
           }
           if(horz>2900 && horz<3200){                                     //volume up
             if(vert>-1340 && vert<-840){
-              delay(50);
-              if (MP3volume > 50){
-                MP3volume=MP3volume-2;
-                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                musicPlayer.setVolume(MP3volume,MP3volume);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                tft.print(MP3volume);                 //write volume
-                delay(100);
-                getLastTouch();
-              } else if (MP3volume <= 50){
-                  MP3volume = 50;
+//              delay(50);
+              currentTouch = debounce(lastTouch);                       //debounced touch
+              if (lastTouch == LOW && currentTouch == HIGH){
+                if (MP3volume > 50){
+                  MP3volume=MP3volume-2;
                   tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
                   musicPlayer.setVolume(MP3volume,MP3volume);
                   tft.setCursor(40, 208);
@@ -461,9 +468,23 @@ void setup(void) {
                   tft.print("Volume:    ");
                   tft.setTextColor(textColor);
                   tft.print(MP3volume);                 //write volume
+                  delay(100);
                   getLastTouch();
-                }
-             }
+                } else if (MP3volume <= 50){
+                    MP3volume = 50;
+                    tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+                    musicPlayer.setVolume(MP3volume,MP3volume);
+                    tft.setCursor(40, 208);
+                    tft.setTextColor(textColor);
+                    tft.setTextSize(2);
+                    tft.print("Volume:    ");
+                    tft.setTextColor(textColor);
+                    tft.print(MP3volume);                 //write volume
+                    getLastTouch();
+                  }
+              }
+              lastTouch = LOW;
+            }
           }
           if(horz>2430 && horz<2730){                                     //mute
             if(vert>-1340 && vert<-840){
