@@ -296,13 +296,6 @@ void setup(void) {
     }
   }
 
-  /*
-   * 
-   * DateTime now = rtc.now();
-      if (now.second() == 0){
-        printTime();
-      }
-   */
   void printInLoop(){
     Serial.print(".");
     delay (1000);  
