@@ -196,7 +196,7 @@ int dateTimeBufferLength;
 
 int setHour, setMinute, setDate, setMonth, setYear;                 //for use with clock set function
 //int setData;                                                        //unused - developmental
-int currentMinute, currentSecond;
+int currentMinute, currentSecond, currentDate;
 int setAlarmHour, setAlarmMinute, origAlarmHour, origAlarmMinute;
 static const char* alarmSched[5] = {"WKDAY", "DAILY", "WKEND", "NEXT"};
 int setSchedIndex = 0;
@@ -320,6 +320,7 @@ void setup(void) {
     tft.setTextColor(textColor);
     tft.println("MENU");                                            //write "MENU" in menu button
     printTime();
+    printDate();
     if (alarmSet){
       printAlarmIndicator();
     }
@@ -342,6 +343,10 @@ void setup(void) {
         currentScreen = 8;
         startWakeScreen();
       } 
+    }
+
+    if (currentDate != now.day()){        
+      printDate();
     }
      
     if (currentMinute != now.minute()){        
@@ -1389,6 +1394,7 @@ void setup(void) {
     tft.setTextColor(lineColor);
     tft.println("MAIN MENU");                                       //write "MAIN MENU" in menu button
     printTime();
+    printDate();
   }
 
   void controlMenuScreen(){                                         //logic for menu screen control
@@ -1397,6 +1403,10 @@ void setup(void) {
     
     if (millis() % 1000 == 0){
       checkCharge();
+    }
+
+    if (currentDate != now.day()){
+      printDate();
     }
 
     if (currentMinute != now.minute()){        
@@ -1806,17 +1816,8 @@ void setup(void) {
         tft.setTextColor(textColor);                              //set text color
         tft.setFont(&FreeSans12pt7b);                                 //set font 
         tft.print(timeBuffer);
-        tft.fillRoundRect(36, 110, 410, 35, 6, HX8357_BLACK); 
-        sprintf(dateBuffer, "%s, %s %02d, %04d",(daysOfTheWeek[now.dayOfTheWeek()]), (months[now.month()-1]), (now.day()), (now.year()));
-        dateBufferLength = strlen(dateBuffer);
-        dateBufferLength *=12;                                        //since font size is 2, multiply by 12 pixels per character     
-        dateBufferLength /= 2;                                        //divide the adjusted buffer length
-        tft.setCursor((240-dateBufferLength), 120);                   //subtract the adjusted "pixelized" buffer length  
-        tft.setTextColor(textColor);                              //set text color
-        tft.setFont();
-        tft.setTextSize(2);                                         
-        tft.print(dateBuffer);
-        currentMinute = now.minute();      
+        currentMinute = now.minute();
+        tft.setFont();      
         } while (now.second() == 0); 
         break;
       case 2:
@@ -1880,16 +1881,7 @@ void setup(void) {
           tft.setTextColor(lineColor);                              //set text color
           tft.setFont(&FreeSans12pt7b);                                 //set font 
           tft.print(timeBuffer);
-          tft.fillRoundRect(36, 110, 410, 35, 6, HX8357_BLACK); 
-          sprintf(dateBuffer, "%s, %s %02d, %04d",(daysOfTheWeek[now.dayOfTheWeek()]), (months[now.month()-1]), (now.day()), (now.year()));
-          dateBufferLength = strlen(dateBuffer);
-          dateBufferLength *=12;                                        //since font size is 2, multiply by 12 pixels per character     
-          dateBufferLength /= 2;                                        //divide the adjusted buffer length
-          tft.setCursor((240-dateBufferLength), 120);                   //subtract the adjusted "pixelized" buffer length  
-          tft.setTextColor(lineColor);                              //set text color
           tft.setFont();
-          tft.setTextSize(2);                                         
-          tft.print(dateBuffer);      
           currentMinute = now.minute();
         } while (now.second() == 0); 
         break;
@@ -1906,6 +1898,19 @@ void setup(void) {
         tft.setTextColor(textColor);                              //set text color
         tft.setFont(&FreeSans12pt7b);                                 //set font 
         tft.print(timeBuffer);
+        tft.setFont();
+        currentMinute = now.minute();      
+        } while (now.second() == 0); 
+        break;            
+    }
+    return;
+  }
+
+  void printDate(){
+    switch (currentScreen){
+      case 1:
+        do{
+        DateTime now = rtc.now();                                     //get current time and date
         tft.fillRoundRect(36, 110, 410, 35, 6, HX8357_BLACK); 
         sprintf(dateBuffer, "%s, %s %02d, %04d",(daysOfTheWeek[now.dayOfTheWeek()]), (months[now.month()-1]), (now.day()), (now.year()));
         dateBufferLength = strlen(dateBuffer);
@@ -1916,7 +1921,39 @@ void setup(void) {
         tft.setFont();
         tft.setTextSize(2);                                         
         tft.print(dateBuffer);
-        currentMinute = now.minute();      
+        currentDate = now.day();      
+        } while (now.second() == 0); 
+        break;
+      case 5:
+        do{
+          DateTime now = rtc.now();
+          tft.fillRoundRect(36, 110, 410, 35, 6, HX8357_BLACK); 
+          sprintf(dateBuffer, "%s, %s %02d, %04d",(daysOfTheWeek[now.dayOfTheWeek()]), (months[now.month()-1]), (now.day()), (now.year()));
+          dateBufferLength = strlen(dateBuffer);
+          dateBufferLength *=12;                                        //since font size is 2, multiply by 12 pixels per character     
+          dateBufferLength /= 2;                                        //divide the adjusted buffer length
+          tft.setCursor((240-dateBufferLength), 120);                   //subtract the adjusted "pixelized" buffer length  
+          tft.setTextColor(lineColor);                              //set text color
+          tft.setFont();
+          tft.setTextSize(2);                                         
+          tft.print(dateBuffer);      
+          currentDate = now.day();
+        } while (now.second() == 0); 
+        break;
+      case 8:
+        do{
+        DateTime now = rtc.now();                                     //get current time and date
+        tft.fillRoundRect(36, 110, 410, 35, 6, HX8357_BLACK); 
+        sprintf(dateBuffer, "%s, %s %02d, %04d",(daysOfTheWeek[now.dayOfTheWeek()]), (months[now.month()-1]), (now.day()), (now.year()));
+        dateBufferLength = strlen(dateBuffer);
+        dateBufferLength *=12;                                        //since font size is 2, multiply by 12 pixels per character     
+        dateBufferLength /= 2;                                        //divide the adjusted buffer length
+        tft.setCursor((240-dateBufferLength), 120);                   //subtract the adjusted "pixelized" buffer length  
+        tft.setTextColor(textColor);                              //set text color
+        tft.setFont();
+        tft.setTextSize(2);                                         
+        tft.print(dateBuffer);
+        currentDate = now.day();      
         } while (now.second() == 0); 
         break;            
     }
@@ -2005,11 +2042,27 @@ void setup(void) {
     audioamp.setReleaseControl(1);                                   // See Datasheet page 24 for value -> ms conversion table
   }
 
+//  void estabAlarmSet(){
+//    DateTime now = rtc.now();
+//    setAlarmHour = now.hour();
+//    setAlarmMinute = now.minute();
+//    setSchedIndex = 0;
+//  }
+
   void estabAlarmSet(){
-    DateTime now = rtc.now();
-    setAlarmHour = now.hour();
-    setAlarmMinute = now.minute();
-    setSchedIndex = 0;
+    if(setSchedIndex == 3){
+      DateTime now = rtc.now();
+      setAlarmHour = now.hour();
+      setAlarmMinute = now.minute();
+    }
+    else if (setSchedIndex == 0 || setSchedIndex == 1){
+      setAlarmHour = 5;
+      setAlarmMinute = 15;
+    }
+    else if (setSchedIndex == 2){
+      setAlarmHour = 7;
+      setAlarmMinute = 0;
+    }
   }
 
   void printSetAlarmTime(){
@@ -2023,9 +2076,9 @@ void setup(void) {
     tft.fillRoundRect(25, 150, 90, 30, 6, HX8357_BLACK);  
     tft.setCursor(40,157);
     tft.print(nowScheduled);
-//    tft.fillRoundRect(25, 200, 90, 30, 6, HX8357_BLACK);  
-//    tft.setCursor(50,207);
-//    tft.print(setMonth);
+    tft.fillRoundRect(25, 200, 90, 30, 6, HX8357_BLACK);  
+    tft.setCursor(50,207);
+    tft.print(snoozeTime);
 //    tft.fillRoundRect(25, 250, 90, 30, 6, HX8357_BLACK);  
 //    tft.setCursor(50,257);
 //    tft.print(setYear);
@@ -2036,13 +2089,13 @@ void setup(void) {
     tft.setCursor(0, 0); 
     tft.setTextColor(textColor);                                      //set text color white
     tft.setTextSize(2);                                               //set text size to 2 (1-6)
-    tft.println("         Arduino Clock Set Menu");                   //print header to screen
+    tft.println("         Arduino Alarm Set Menu");                   //print header to screen
   
     tft.drawRoundRect(10, 20, 460, 290, 6, lineColor);                //draw screen outline
     tft.drawRoundRect(20, 45, 100, 40, 6, lineColor);                 //draw hour box
     tft.drawRoundRect(20, 95, 100, 40, 6, lineColor);                 //draw minute box
-    tft.drawRoundRect(20, 145, 100, 40, 6, lineColor);                //draw date box
-//    tft.drawRoundRect(20, 195, 100, 40, 6, lineColor);                //draw month box
+    tft.drawRoundRect(20, 145, 100, 40, 6, lineColor);                //draw schedule box
+    tft.drawRoundRect(20, 195, 100, 40, 6, lineColor);                //draw snoozeTime box
 //    tft.drawRoundRect(20, 245, 100, 40, 6, lineColor);                //draw year box
     tft.drawRoundRect(420, 145, 40, 40, 6, lineColor);                //draw Set box
     tft.drawRoundRect(420, 260, 40, 40, 6, lineColor);                //draw Exit box
@@ -2053,8 +2106,8 @@ void setup(void) {
     tft.drawRoundRect(300, 95, 40, 40, 6, lineColor);                 //draw minute down buton
     tft.drawRoundRect(250, 145, 40, 40, 6, lineColor);                //draw schedule up buton
     tft.drawRoundRect(300, 145, 40, 40, 6, lineColor);                //draw schedule down buton
-//    tft.drawRoundRect(250, 195, 40, 40, 6, lineColor);                //draw month up buton
-//    tft.drawRoundRect(300, 195, 40, 40, 6, lineColor);                //draw month down buton
+    tft.drawRoundRect(250, 195, 40, 40, 6, lineColor);                //draw snooze time up buton
+    tft.drawRoundRect(300, 195, 40, 40, 6, lineColor);                //draw snooze time down buton
 //    tft.drawRoundRect(250, 245, 40, 40, 6, lineColor);                //draw year up buton
     tft.drawRoundRect(300, 245, 40, 40, 6, lineColor);                //draw year down buton
       
@@ -2064,8 +2117,8 @@ void setup(void) {
     tft.drawTriangle(320, 125, 308, 105, 332, 105,textColor);         //draw down triangle for minute
     tft.drawTriangle(270, 155, 258, 175, 282, 175,textColor);         //draw up triangle for schedule
     tft.drawTriangle(320, 175, 308, 155, 332, 155,textColor);         //draw down triangle for schedule
-//    tft.drawTriangle(270, 205, 258, 225, 282, 225,textColor);         //draw up triangle for month
-//    tft.drawTriangle(320, 225, 308, 205, 332, 205,textColor);         //draw down triangle for month
+    tft.drawTriangle(270, 205, 258, 225, 282, 225,textColor);         //draw up triangle for snooze time
+    tft.drawTriangle(320, 225, 308, 205, 332, 205,textColor);         //draw down triangle for snooze time
 //    tft.drawTriangle(270, 255, 258, 275, 282, 275,textColor);         //draw up triangle for year
 //    tft.drawTriangle(320, 275, 308, 255, 332, 255,textColor);         //draw down triangle for year
   
@@ -2082,8 +2135,8 @@ void setup(void) {
     tft.print("Minute");
     tft.setCursor(145,157);
     tft.print("Schedule");
-//    tft.setCursor(145,207);
-//    tft.print("Month");
+    tft.setCursor(145,207);
+    tft.print("Snooze");
     if (alarmSet){
       tft.setCursor(214,257);
       tft.print("ON");
@@ -2102,8 +2155,8 @@ void setup(void) {
     tft.print(setAlarmMinute);
     tft.setCursor(40,157);
     tft.print(nowScheduled);
-//    tft.setCursor(50,207);
-//    tft.print(setMonth);
+    tft.setCursor(50,207);
+    tft.print(snoozeTime);
 //    tft.setCursor(50,257);
 //    tft.print(setYear);
     
@@ -2247,6 +2300,8 @@ void setup(void) {
               tft.setTextSize(2);
               tft.setCursor(40,157);
               tft.print(nowScheduled);
+              estabAlarmSet();
+              printSetAlarmTime();
               getLastTouch();
               delay(100);
             } else setSchedIndex = 0;
@@ -2262,9 +2317,39 @@ void setup(void) {
               tft.setTextSize(2);
               tft.setCursor(40,157);
               tft.print(nowScheduled);
+              estabAlarmSet();
+              printSetAlarmTime();
               getLastTouch();
               delay(100);
             } else setSchedIndex = 4;
+          }
+        }
+        if(horz>2100 && horz<2370){                                      //snooze up
+          if(vert>-1120 && vert<-730){
+            delay(100);
+            if (snoozeTime < 10){
+              snoozeTime ++;
+              tft.fillRoundRect(25, 200, 90, 30, 6, HX8357_RED);
+              tft.setTextSize(2);
+              tft.setCursor(50,207);
+              tft.print(snoozeTime);
+              getLastTouch();
+              delay(100);
+            } else snoozeTime = 0;
+          }
+        }
+        if(horz>2500 && horz<2770){                                     //snooze down
+          if(vert>-1120 && vert<-730){
+            delay(100);
+            if (snoozeTime > 1){
+              snoozeTime --;
+              tft.fillRoundRect(25, 200, 90, 30, 6, HX8357_RED);
+              tft.setTextSize(2);
+              tft.setCursor(50,207);
+              tft.print(snoozeTime);
+              getLastTouch();
+              delay(100);
+            } else snoozeTime = 10;
           }
         }
         if(horz>2500 && horz<2770){                                     //alarm on/off toggle
@@ -2293,7 +2378,6 @@ void setup(void) {
           if(vert>-1760 && vert<-1330){
             delay(100);
             printSetAlarmTime();
-//            rtc.adjust(DateTime(setYear, setMonth, setDate, setHour, setMinute, 0));
             getLastTouch();
             delay(100);
           }
@@ -2329,6 +2413,7 @@ void setup(void) {
     tft.setTextColor(textColor);
     tft.println("SNOOZE");                                           //write "SNOOZE" in button
     printTime();
+    printDate();
     printAlarmIndicator();
   }
 
@@ -2338,6 +2423,10 @@ void setup(void) {
 
     if (millis() % 1000 == 0){
       checkCharge();
+    }
+
+    if (currentDate != now.day()){
+      printDate();
     }
     
     if (currentMinute != now.minute()){        
