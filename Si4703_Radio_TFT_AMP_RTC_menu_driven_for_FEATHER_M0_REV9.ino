@@ -44,7 +44,7 @@ float measuredvbat;
 
 #define CHARGEPIN A0
 float charge;
-
+unsigned long timeNow = 0;
 ////////////////////////////////////////////   TFT DEFINITIONS   ////////////////////////////////////////////
 
 #define TFT_RST -1
@@ -675,7 +675,7 @@ void setup(void) {
               delay(100);
               Si4703PowerOff();
               currentScreen = 1;
-              delay(100);
+//              delay(100);
               getLastTouch();
               delay(100);
               startMainScreen();
@@ -766,6 +766,8 @@ void setup(void) {
     tft.setTextColor(textColor);
     tft.print(MP3volume);                                          //write MP3volume
     printTime();
+    nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+    printMP3Tracks();
   }
 
   void printMP3Tracks(){
@@ -801,20 +803,28 @@ void setup(void) {
     Serial.print("Now Playing: ");Serial.println(myAlbum_1_TrackNames[myAlbum_1_Index]);
 //    playMusicState = 0;
     while (musicPlayer.playingMusic){
+//      if (millis() > timeNow + 500){
+//        timeNow = millis();
+//        Serial.println("In while loop");
+//      }
+//      controlMP3(); 
       if (millis() % 500 == 0){
         Serial.println(F("In while loop"));
-        controlMP3();
+        if(tftNotTouched){
+          controlMP3();
+        }
       }
     }
   }
   
   void printInLoop(){
-    Serial.print(".");
-    delay (1000);  
+    if (millis() % 1000 == 0){
+      Serial.print(".");
+    }
   }
 
   void controlMP3(){                                                //control MP3 screen
-    if(musicPlayer.playingMusic || musicPlayer.stopped() ) {
+    if(musicPlayer.playingMusic || musicPlayer.stopped() ||  musicPlayer.paused()) {
       
       TS_Point p = ts.getPoint();                                   
       DateTime now = rtc.now();                                       //get current time and date
@@ -823,9 +833,9 @@ void setup(void) {
         checkCharge();
       }
 
-//      if (currentMinute != now.minute()){        
-//        printTime();
-//      }
+      if (currentMinute != now.minute()){        
+        printTime();
+      }
 
       vert = tft.height() - p.x;
       horz = p.y;
@@ -838,9 +848,9 @@ void setup(void) {
       p.x = map(p.x, TS_MINY, TS_MAXY, 0, tft.height());              // Scale using the calibration #'s and rotate coordinate system
       p.y = map(p.y, TS_MINX, TS_MAXX, 0, tft.width());
   
-      if(tftNotTouched){
+      if(tftNotTouched){                                                 //IRQ Triggers ISR tsControlInt()to toggle
 //        Serial.println("TOUCH_IRQ is active"); 
-        if (ts.touched()){// && tftNotTouched) {                                             //if touch is detected
+        if (ts.touched()){                                             //if touch is detected
           if(horz>1720 && horz<2280){                                   //play track
             if(vert>-2000 && vert<-1580){
               Serial.println("play track touched");
