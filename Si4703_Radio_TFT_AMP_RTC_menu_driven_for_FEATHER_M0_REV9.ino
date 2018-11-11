@@ -5,7 +5,7 @@
  * 
  * 
  * NEED TO COMPLETE/IMPROVE (11/7/2018):
- *  - MP3 playback still times out and locks up the mux at random intervals.
+ *  - MP3 playback still times out and locks up the MCU at random intervals.
  *  - figure out how to improve responsiveness of touch control - how to interrupt reading/update of RDS in radio mode??  how to interrupt
  *    MP3 player during music play.  Still have ghost touch issues.  
  *  - TPA2016 performance - 4/12/18: Improved by turning off AGC and setting the gain at -10.  Still have response issues with RDS interrupting setAmp() in radio mode
