@@ -124,7 +124,7 @@ enum state {
   PAUSED,
   STOPPED
 } playMusicState = STOPPED;
-#define AUTO_PLAY_NEXT true                                           //auto play next track when true
+boolean AUTO_PLAY_NEXT = false;                                       //auto play next track when true
 #define TRACKS_MAX      100                                           // Maximum number of files (tracks) to load
 
 int currentTrack, totalTracks;
@@ -214,7 +214,7 @@ void tsControlInt(){
     tft.println("           Arduino MP3 Player");                    //print header to screen
   
     tft.drawRoundRect(10, 20, 460, 290, 6, lineColor);               //draw screen outline
-    tft.drawRoundRect(20, 130, 50, 50, 6, lineColor);                //draw _________ button
+    tft.drawRoundRect(20, 130, 50, 50, 6, lineColor);                //draw autoPlay button
     tft.drawRoundRect(80, 130, 50, 50, 6, lineColor);                //draw _________ button
     tft.drawRoundRect(140, 130, 50, 50, 6, lineColor);               //draw stop button
     tft.drawRoundRect(200, 130, 80, 50, 6, lineColor);               //draw play button
@@ -228,7 +228,7 @@ void tsControlInt(){
     tft.drawRoundRect(410, 130, 50, 50, 6, lineColor);               //draw station down buton
     tft.drawRoundRect(350, 190, 50, 50, 6, lineColor);               //draw volume up buton
     tft.drawRoundRect(410, 190, 50, 50, 6, lineColor);               //draw volume down buton
-    tft.fillTriangle(220, 140, 221, 170, 260, 155,textColor);        //draw play button triangle 
+    tft.fillTriangle(220, 140, 220, 170, 260, 155,textColor);        //draw play button triangle 
     tft.fillRect(300,140, 10, 30, textColor);                        //draw left bar pause
     tft.fillRect(320,140, 10, 30, textColor);                        //draw right bar pause
     tft.fillRoundRect(150,140, 30, 30, 4, textColor);                //draw stop button square
@@ -236,6 +236,10 @@ void tsControlInt(){
     tft.drawTriangle(435, 165, 422, 144, 448, 144,textColor);        //draw down triangle for station
     tft.drawTriangle(375, 204, 362, 225, 388, 225,textColor);        //draw up triangle for volume
     tft.drawTriangle(435, 225, 422, 204, 448, 204,textColor);        //draw down triangle for volume
+    tft.fillCircle(45,155,13,textColor);                             //draw continuous play symbol 
+    tft.fillCircle(45,155,10,HX8357_BLACK);                          //  ||
+    tft.fillTriangle(51,155,63,155,54,172,HX8357_BLACK);             //  ||
+    tft.fillTriangle(51,155,63,155,57,164,textColor);                //draw continuous play symbol 
     tft.setCursor(308, 203);                                         //put cursor in mute box
     tft.setTextSize(3);                                              //set text size 3
     tft.setTextColor(textColor);
@@ -559,6 +563,7 @@ bool nameCheck(char* name) {
               delay(50);
               Serial.println("STOPPING");
               musicPlayer.stopPlaying();
+              playMusicState  = STOPPED;
               getLastTouch();
               delay(50);
             }
@@ -571,14 +576,26 @@ bool nameCheck(char* name) {
 //              delay(50);
 //            }
 //          }
-//          if(horz>320 && horz<620){                                    //left blank button
-//            if(vert>-2000 && vert<-1580){
-//              delay(50);
-//              musicPlayer.stopPlaying();
-//              getLastTouch();
-//              delay(50);
-//            }
-//          }
+          if(horz>320 && horz<620){                                    //continuous play button
+            if(vert>-2000 && vert<-1580){
+              delay(50);
+              musicPlayer.pausePlaying(true);
+              if (AUTO_PLAY_NEXT == true) {
+                  delay(50);
+                  AUTO_PLAY_NEXT = false;
+                  Serial.println("Continuous Play OFF");
+                  tft.fillCircle(45,155,3,HX8357_BLACK);
+                } else { 
+                  delay(50);
+                  AUTO_PLAY_NEXT = true;
+                  Serial.println("Continuous Play ON");
+                  tft.fillCircle(45,155,3,HX8357_RED);
+                  }
+              musicPlayer.pausePlaying(false);
+              getLastTouch();
+              delay(50);
+            }
+          }
           if(horz>2900 && horz<3200){                                   //next track
             if(vert>-2000 && vert<-1580){
               delay(50);
@@ -610,8 +627,10 @@ bool nameCheck(char* name) {
           }
           if(horz>3350 && horz<3650){                                   //volume down
             if(vert>-1340 && vert<-840){
+              noInterrupts();
               Serial.println("volume down touched");
-              delay(50);
+              musicPlayer.pausePlaying(true);
+//              delay(50);
               if (MP3volume < 100){
                 MP3volume=MP3volume+2;
                 tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
@@ -624,7 +643,8 @@ bool nameCheck(char* name) {
                 Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
                 noInterrupts();
                 tft.print(MP3volume);                 //write volume
-                interrupts();                getLastTouch();
+                interrupts();
+                getLastTouch();
                 delay(50);
               } else if (MP3volume >= 100){
                   MP3volume = 100;
@@ -638,13 +658,17 @@ bool nameCheck(char* name) {
                   tft.print(MP3volume);                 //write volume
                   getLastTouch();
                   delay(50);
-              }
+                }
+              musicPlayer.pausePlaying(false);
+              interrupts();
             }
           }
           if(horz>2900 && horz<3200){                                     //volume up
             if(vert>-1340 && vert<-840){
+              noInterrupts();
               Serial.println("volume up touched");
-              delay(50);
+              musicPlayer.pausePlaying(true);
+//              delay(50);
               if (MP3volume > 50){
                 MP3volume=MP3volume-2;
                 tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
@@ -672,13 +696,16 @@ bool nameCheck(char* name) {
                   tft.print(MP3volume);                 //write volume
                   getLastTouch();
                   delay(50);
-                  }
+                }
+              musicPlayer.pausePlaying(false);
+              interrupts();
             }
           }
           if(horz>2430 && horz<2730){                                     //mute
             if(vert>-1340 && vert<-840){
+              musicPlayer.pausePlaying(true);
               int lastMP3volume = MP3volume;
-              delay(50);
+//              delay(50);
               if(!muted){ 
                 tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
                 audioamp.enableChannel(false,false);
@@ -692,7 +719,7 @@ bool nameCheck(char* name) {
                 Serial.print ("muted = ");Serial.print(muted);
                 getLastTouch();
                 delay(50);
-            }else if(muted){
+            } else if(muted){
                 tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
                 musicPlayer.setVolume(lastMP3volume,lastMP3volume);
                 audioamp.enableChannel(true,true);
@@ -706,7 +733,8 @@ bool nameCheck(char* name) {
                 Serial.print ("muted = ");Serial.print(muted);
                 getLastTouch();
                 delay(50);
-                }
+              }
+              musicPlayer.pausePlaying(false);
             }
           }
           if(horz>3370 && horz<3650){                                     //exit to main screen
@@ -965,7 +993,9 @@ void loop() {
     timeNow = millis();
     Serial.println("IN MAIN LOOP");
   } 
-  controlMP3();
-}  
-
-  
+  switch (currentScreen){
+      case 3:
+        controlMP3();
+          
+  }
+}
