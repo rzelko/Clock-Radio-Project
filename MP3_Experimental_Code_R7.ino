@@ -125,6 +125,7 @@ enum state {
   STOPPED
 } playMusicState = STOPPED;
 boolean AUTO_PLAY_NEXT = false;                                       //auto play next track when true
+boolean SHUFFLE_PLAY = false;                                         //shuffle tracks when true
 #define TRACKS_MAX      100                                           // Maximum number of files (tracks) to load
 
 int currentTrack, totalTracks;
@@ -145,6 +146,97 @@ int dateTimeBufferLength;
 
 int currentMinute, currentSecond;
 
+////////////////////////////////////////////    BUTTONS:IMAGES   ////////////////////////////////////////////
+
+// SHUFFLE SYMBOL (width x height = 40,40)
+static const uint8_t imageShuffle[] PROGMEM = {
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000001, B10000000, 
+  B00000000, B00000000, B00000000, B00000000, B11000000, 
+  B00000000, B00000000, B00000000, B00000000, B11100000, 
+  B00000000, B00000000, B00000000, B00000000, B01110000, 
+  B01111111, B11100000, B00000011, B11111111, B11111000, 
+  B01111111, B11111000, B00001111, B11111111, B11111100, 
+  B01111111, B11111100, B00011111, B11111111, B11111100, 
+  B01111111, B11111110, B00111111, B11111111, B11111000, 
+  B00000000, B00011110, B01111100, B00000000, B01110000, 
+  B00000000, B00001100, B01111000, B00000000, B01100000, 
+  B00000000, B00000100, B11110000, B00000000, B11000000, 
+  B00000000, B00000000, B11100000, B00000001, B10000000, 
+  B00000000, B00000000, B11100000, B00000000, B00000000, 
+  B00000000, B00000001, B11000000, B00000000, B00000000, 
+  B00000000, B00000001, B11000000, B00000000, B00000000, 
+  B00000000, B00000001, B11000000, B00000000, B00000000, 
+  B00000000, B00000011, B10000000, B00000000, B00000000, 
+  B00000000, B00000011, B10000000, B00000000, B00000000, 
+  B00000000, B00000111, B00000000, B00000001, B11000000, 
+  B00000000, B00001111, B00011000, B00000000, B11100000, 
+  B00000000, B00011111, B00111000, B00000000, B01110000, 
+  B00000000, B00111110, B00111110, B00000000, B01111000, 
+  B01111111, B11111100, B00011111, B11111111, B11111100, 
+  B01111111, B11111000, B00001111, B11111111, B11111110, 
+  B01111111, B11110000, B00000111, B11111111, B11111100, 
+  B00000000, B00000000, B00000000, B00000000, B01111000, 
+  B00000000, B00000000, B00000000, B00000000, B01110000, 
+  B00000000, B00000000, B00000000, B00000000, B11000000, 
+  B00000000, B00000000, B00000000, B00000001, B11000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  
+};
+
+// CONTINUOUS PLAY SYMBOL (width x height = 40,40)
+static const uint8_t imageContPlay[] PROGMEM = {
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000001, B10000000, B00000000, 
+  B00000000, B00000000, B00000000, B11000000, B00000000, 
+  B00000000, B00000000, B00000000, B11100000, B00000000, 
+  B00000000, B00000000, B00000000, B01110000, B00000000, 
+  B00000000, B00000000, B00000000, B01111000, B00000000, 
+  B00000000, B00001111, B11111111, B11111110, B00000000, 
+  B00000000, B00111111, B11111111, B11111110, B00000000, 
+  B00000000, B11111111, B11111111, B11111100, B00000000, 
+  B00000011, B11111110, B00000000, B11111000, B00000000, 
+  B00000111, B11110000, B00000000, B01110000, B00000000, 
+  B00001111, B11000000, B00000000, B11100000, B00000000, 
+  B00011111, B00000000, B00000000, B11000000, B00001000, 
+  B00111110, B00000000, B00000011, B10000000, B00011100, 
+  B00111100, B00000000, B00000000, B00000000, B00111110, 
+  B01111000, B00000000, B00000000, B00000000, B00011110, 
+  B01111000, B00000000, B00000000, B00000000, B00001110, 
+  B01110000, B00000000, B00000000, B00000000, B00001110, 
+  B01110000, B00000000, B00000000, B00000000, B00001110, 
+  B01111000, B00000000, B00000000, B00000000, B00011110, 
+  B01111000, B00000000, B00000000, B00000000, B00011110, 
+  B00111000, B00000001, B10000000, B00000000, B00111100, 
+  B00100000, B00000111, B00000000, B00000000, B01111100, 
+  B00000000, B00001110, B00000000, B00000001, B11111000, 
+  B00000000, B00011110, B00000000, B00000011, B11110000, 
+  B00000000, B00111100, B00000000, B00011111, B11100000, 
+  B00000000, B01111111, B10000001, B11111111, B10000000, 
+  B00000000, B11111111, B11111111, B11111111, B00000000, 
+  B00000000, B11111111, B11111111, B11111100, B00000000, 
+  B00000000, B01111111, B11111111, B11000000, B00000000, 
+  B00000000, B00111100, B00000000, B00000000, B00000000, 
+  B00000000, B00001100, B00000000, B00000000, B00000000, 
+  B00000000, B00000111, B00000000, B00000000, B00000000, 
+  B00000000, B00000011, B00000000, B00000000, B00000000, 
+  B00000000, B00000001, B10000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  B00000000, B00000000, B00000000, B00000000, B00000000, 
+  
+};
 ////////////////////////////////////////////    M0 SERIAL CONV   ////////////////////////////////////////////
 
 #if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL)
@@ -164,25 +256,16 @@ void setup(void) {
   pinMode(12,OUTPUT);                                         //initialize RESET pin for Radio(adapted for MO controller)
   pinMode(13,OUTPUT);                                         //initialize SHDN pin for Amp (adapted for MO controller)
   pinMode(CHARGEPIN,INPUT);                                         //initialize CHARGEPIN as input (read presence of USB/adapter)
-//  pinMode(TOUCH_IRQ, INPUT_PULLUP);  //CHANGED!!!!                               //initialize TFT IRQ as interrupt
   pinMode(TOUCH_IRQ, INPUT_PULLDOWN);
   delay(1000);                                                      // wait for console opening
 //  regDump();
 
-//  attachInterrupt(digitalPinToInterrupt(TOUCH_IRQ),tsControlInt,RISING);
   currentScreen = 3;
   startMP3Screen();
 }  
 
 ////////////////////////////////////////          ISR          /////////////////////////////////////////////
   
-//  void tsControlInt(){
-//    IRQValue = analogRead(TOUCH_IRQ);
-//    if (IRQValue > IRQThreshold) {
-//      tftNotTouched = !tftNotTouched;
-//    }
-//  }
-
 void tsControlInt(){
     noInterrupts();
     tftNotTouched = digitalRead(TOUCH_IRQ);
@@ -237,10 +320,12 @@ void tsControlInt(){
     tft.drawTriangle(435, 165, 422, 144, 448, 144,textColor);        //draw down triangle for station
     tft.drawTriangle(375, 204, 362, 225, 388, 225,textColor);        //draw up triangle for volume
     tft.drawTriangle(435, 225, 422, 204, 448, 204,textColor);        //draw down triangle for volume
-    tft.fillCircle(45,155,13,textColor);                             //draw continuous play symbol 
-    tft.fillCircle(45,155,10,HX8357_BLACK);                          //  ||
-    tft.fillTriangle(51,155,63,155,54,172,HX8357_BLACK);             //  ||
-    tft.fillTriangle(51,155,63,155,57,164,textColor);                //draw continuous play symbol 
+//    tft.fillCircle(45,155,13,textColor);                             //draw continuous play symbol 
+//    tft.fillCircle(45,155,10,HX8357_BLACK);                          //  ||
+//    tft.fillTriangle(51,155,63,155,54,172,HX8357_BLACK);             //  ||
+//    tft.fillTriangle(51,155,63,155,57,164,textColor);                //draw continuous play symbol 
+    tft.drawBitmap(25,135, imageContPlay, 40, 40, textColor);        //draw continuous play symbol 
+    tft.drawBitmap(85, 135, imageShuffle, 40, 40, textColor);        //draw shuffle symbol
     tft.setCursor(308, 203);                                         //put cursor in mute box
     tft.setTextSize(3);                                              //set text size 3
     tft.setTextColor(textColor);
@@ -422,250 +507,267 @@ bool nameCheck(char* name) {
     vert = tft.height() - p.x;
     horz = p.y;
      
-      p.x = map(p.x, TS_MINY, TS_MAXY, 0, tft.height());              // Scale using the calibration #'s and rotate coordinate system
-      p.y = map(p.y, TS_MINX, TS_MAXX, 0, tft.width());
+    p.x = map(p.x, TS_MINY, TS_MAXY, 0, tft.height());              // Scale using the calibration #'s and rotate coordinate system
+    p.y = map(p.y, TS_MINX, TS_MAXX, 0, tft.width());
 
-      if (AUTO_PLAY_NEXT) {
+    if (AUTO_PLAY_NEXT) {
+      if (SHUFFLE_PLAY){
         if (playMusicState == PLAYING && musicPlayer.stopped()) {
-          myAlbum_1_Index ++;
+          myAlbum_1_Index = random (0,13);
           nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
           printMP3Tracks();
-          Serial.print("Next ");
-          Serial.print(currentTrack); Serial.print("=");
-          Serial.println(trackListing[currentTrack]);
           playMusicState = PLAYING;
           playMP3Tracks();
-          Serial.println("back from function");
         }
-      }
+      } else
+        if (playMusicState == PLAYING && musicPlayer.stopped()) {
+          if(myAlbum_1_Index<12){
+            myAlbum_1_Index ++;
+            nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+            printMP3Tracks();
+            playMusicState = PLAYING;
+            playMP3Tracks();            
+          } else {
+              myAlbum_1_Index = -1;
+              playMusicState = PLAYING;
+            }
+        }
+    }
       
-      if(tftNotTouched == 0 || (musicPlayer.playingMusic && tftNotTouched == 1)){ 
-//        noInterrupts();
-        if (ts.touched()){                                              //if touch is detected
-          if(horz>1720 && horz<2280){                                   //play track
-            if(vert>-2000 && vert<-1580){
-              delay(50);
-              Serial.println("play track touched");
-              delay(50);
-              nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-              playMusicState = PLAYING;  
-              getLastTouch();
-              delay(50);
-              musicPlayer.feedBuffer();
-              playMP3Tracks();
-              Serial.println("back from function");
-            }
-          }
-          if(horz>2480 && horz<2750){                                   //pause track
-            if(vert>-2000 && vert<-1580){
-              delay(50);
-              if (!musicPlayer.stopped()) {
-                if (musicPlayer.paused()) {
-                  delay(50);
-                  Serial.println("Resumed");
-                  musicPlayer.pausePlaying(false);
-                  playMusicState  = PLAYING;
-                } else { 
-                  delay(50);
-                  Serial.println("Paused");
-                  musicPlayer.pausePlaying(true);
-                  playMusicState = PAUSED;
-                }    
-              }
-              getLastTouch();
-              delay(50);
-            }
-          }
-
-
-          if(horz>1280 && horz<1580){                                   //stop track
-            if(vert>-2000 && vert<-1580){
-              delay(50);
-              Serial.println("STOPPING");
-              musicPlayer.stopPlaying();
-              playMusicState  = STOPPED;
-              getLastTouch();
-              delay(50);
-            }
-          }
-//          if(horz>780 && horz<1100){                                   //right blank button
-//            if(vert>-2000 && vert<-1580){
-//              delay(50);
-//              musicPlayer.stopPlaying();
-//              getLastTouch();
-//              delay(50);
-//            }
-//          }
-          if(horz>320 && horz<620){                                    //continuous play button
-            if(vert>-2000 && vert<-1580){
-              delay(10);
-              musicPlayer.pausePlaying(true);
-              if (AUTO_PLAY_NEXT == true) {
-                  delay(50);
-                  AUTO_PLAY_NEXT = false;
-                  Serial.println("Continuous Play OFF");
-                  tft.fillCircle(45,155,3,HX8357_BLACK);
-                } else { 
-                  delay(50);
-                  AUTO_PLAY_NEXT = true;
-                  Serial.println("Continuous Play ON");
-                  tft.fillCircle(45,155,3,HX8357_RED);
-                  }
-              musicPlayer.pausePlaying(false);
-              getLastTouch();
-//              tftNotTouched = digitalRead(TOUCH_IRQ);
-              delay(50);
-            }
-          }
-          if(horz>2900 && horz<3200){                                   //next track
-            if(vert>-2000 && vert<-1580){
-              delay(50);
-              Serial.println("STOPPING");
-              musicPlayer.stopPlaying();
-              playMusicState  = STOPPED;
-              if(myAlbum_1_Index<12){
-                myAlbum_1_Index ++;
-                nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-                printMP3Tracks();
-                getLastTouch();
-                delay(50);
-                } else myAlbum_1_Index = 0;
-            }
-          }
-          if(horz>3350 && horz<3650){                                   //previous track
-            if(vert>-2000 && vert<-1580){
-              delay(50);
-              Serial.println("STOPPING");
-              musicPlayer.stopPlaying();
-              playMusicState  = STOPPED;
-              if (myAlbum_1_Index>0){
-                myAlbum_1_Index --;
-                nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
-                printMP3Tracks();
-                getLastTouch();
-                delay(50);
-                } else myAlbum_1_Index = 13; 
-            }
-          }
-          if(horz>3350 && horz<3650){                                   //volume down
-            if(vert>-1340 && vert<-840){
-              Serial.println("volume down touched");
-              musicPlayer.pausePlaying(true);
-              delay(10);
-              if (MP3volume < 100){
-                MP3volume=MP3volume+2;
-                tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
-                musicPlayer.setVolume(MP3volume,MP3volume);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
-                tft.print(MP3volume);                 //write volume
-                getLastTouch();
-                delay(50);
-              } else if (MP3volume >= 100){
-                  MP3volume = 100;
-                  tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                  musicPlayer.setVolume(MP3volume,MP3volume);
-                  tft.setCursor(40, 208);
-                  tft.setTextColor(textColor);
-                  tft.setTextSize(2);
-                  tft.print("Volume:    ");
-                  tft.setTextColor(textColor);
-                  tft.print(MP3volume);                 //write volume
-                  getLastTouch();
-                  delay(50);
-                }
-              musicPlayer.pausePlaying(false);
-            }
-          }
-          if(horz>2900 && horz<3200){                                     //volume up
-            if(vert>-1340 && vert<-840){
-              Serial.println("volume up touched");
-              musicPlayer.pausePlaying(true);
-              delay(10);
-              if (MP3volume > 50){
-                MP3volume=MP3volume-2;
-                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                musicPlayer.setVolume(MP3volume,MP3volume);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
-                tft.print(MP3volume);                 //write volume
-                getLastTouch();
-                delay(50);
-              } else if (MP3volume <= 50){
-                  MP3volume = 50;
-                  tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                  musicPlayer.setVolume(MP3volume,MP3volume);
-                  tft.setCursor(40, 208);
-                  tft.setTextColor(textColor);
-                  tft.setTextSize(2);
-                  tft.print("Volume:    ");
-                  tft.setTextColor(textColor);
-                  tft.print(MP3volume);                 //write volume
-                  getLastTouch();
-                  delay(50);
-                }
-              musicPlayer.pausePlaying(false);
-            }
-          }
-          if(horz>2430 && horz<2730){                                     //mute
-            if(vert>-1340 && vert<-840){
-              musicPlayer.pausePlaying(true);
-              int lastMP3volume = MP3volume;
-//              delay(50);
-              if(!muted){ 
-                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                audioamp.enableChannel(false,false);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                tft.print("MUTED");                 //write volume
-                muted = true;
-                Serial.print ("muted = ");Serial.print(muted);
-                getLastTouch();
-                delay(50);
-            } else if(muted){
-                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
-                musicPlayer.setVolume(lastMP3volume,lastMP3volume);
-                audioamp.enableChannel(true,true);
-                tft.setCursor(40, 208);
-                tft.setTextColor(textColor);
-                tft.setTextSize(2);
-                tft.print("Volume:    ");
-                tft.setTextColor(textColor);
-                tft.print(MP3volume);                 //write volume
-                muted = false;
-                Serial.print ("muted = ");Serial.print(muted);
-                getLastTouch();
-                delay(50);
-              }
-              musicPlayer.pausePlaying(false);
-            }
-          }
-          if(horz>3370 && horz<3650){                                     //exit to main screen
-            if(vert>-580 && vert<-110){
-              delay(50);
-              musicPlayer.stopPlaying();
-              playMusicState  = STOPPED;
-              ampOff();
-              currentScreen = 3;
-              getLastTouch();
-              delay(50);
-              startMP3Screen();
-            }
+    if(tftNotTouched == 0 || (musicPlayer.playingMusic && tftNotTouched == 1)){ 
+      if (ts.touched()){                                              //if touch is detected
+        if(horz>1720 && horz<2280){                                   //play track
+          if(vert>-2000 && vert<-1580){
+            delay(50);
+            Serial.println("play track touched");
+            delay(50);
+            nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+            playMusicState = PLAYING;  
+            getLastTouch();
+            delay(50);
+            musicPlayer.feedBuffer();
+            playMP3Tracks();
+            Serial.println("back from function");
           }
         }
-//      interrupts();
+        if(horz>2480 && horz<2750){                                   //pause track
+          if(vert>-2000 && vert<-1580){
+            delay(50);
+            if (!musicPlayer.stopped()) {
+              if (musicPlayer.paused()) {
+                delay(50);
+                Serial.println("Resumed");
+                musicPlayer.pausePlaying(false);
+                playMusicState  = PLAYING;
+              } else { 
+                delay(50);
+                Serial.println("Paused");
+                musicPlayer.pausePlaying(true);
+                playMusicState = PAUSED;
+              }    
+            }
+            getLastTouch();
+            delay(50);
+          }
+        }
+        if(horz>1280 && horz<1580){                                   //stop track
+          if(vert>-2000 && vert<-1580){
+            delay(50);
+            Serial.println("STOPPING");
+            musicPlayer.stopPlaying();
+            playMusicState  = STOPPED;
+            getLastTouch();
+            delay(50);
+          }
+        }
+        if(horz>780 && horz<1100){                                   //shuffle play button
+          if(vert>-2000 && vert<-1580){
+            delay(10);
+            musicPlayer.pausePlaying(true);
+            if (SHUFFLE_PLAY == true){
+              delay(50);
+              SHUFFLE_PLAY = false;
+              Serial.println("Shuffle Play OFF");
+              tft.drawBitmap(85, 135, imageShuffle, 40, 40, textColor);
+            } else { 
+              delay(50);
+              SHUFFLE_PLAY = true;
+              Serial.println("Shuffle Play ON");
+              tft.drawBitmap(85, 135, imageShuffle, 40, 40, HX8357_GREEN);
+              }
+            musicPlayer.pausePlaying(false);
+            getLastTouch();
+            delay(50);
+          }
+        }
+        if(horz>320 && horz<620){                                    //continuous play button
+          if(vert>-2000 && vert<-1580){
+            delay(10);
+            musicPlayer.pausePlaying(true);
+            if (AUTO_PLAY_NEXT == true) {
+                delay(50);
+                AUTO_PLAY_NEXT = false;
+                Serial.println("Continuous Play OFF");
+                tft.drawBitmap(25,135, imageContPlay, 40, 40, textColor);
+              } else { 
+                delay(50);
+                AUTO_PLAY_NEXT = true;
+                Serial.println("Continuous Play ON");
+                tft.drawBitmap(25,135, imageContPlay, 40, 40, HX8357_GREEN);
+                }
+            musicPlayer.pausePlaying(false);
+            getLastTouch();
+            delay(50);
+          }
+        }
+        if(horz>2900 && horz<3200){                                   //next track
+          if(vert>-2000 && vert<-1580){
+            delay(50);
+            Serial.println("STOPPING");
+            musicPlayer.stopPlaying();
+            playMusicState  = STOPPED;
+            if(myAlbum_1_Index<12){
+              myAlbum_1_Index ++;
+              nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+              printMP3Tracks();
+              getLastTouch();
+              delay(50);
+              } else myAlbum_1_Index = -1;
+          }
+        }
+        if(horz>3350 && horz<3650){                                   //previous track
+          if(vert>-2000 && vert<-1580){
+            delay(50);
+            Serial.println("STOPPING");
+            musicPlayer.stopPlaying();
+            playMusicState  = STOPPED;
+            if (myAlbum_1_Index>0){
+              myAlbum_1_Index --;
+              nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
+              printMP3Tracks();
+              getLastTouch();
+              delay(50);
+              } else myAlbum_1_Index = 13; 
+          }
+        }
+        if(horz>3350 && horz<3650){                                   //volume down
+          if(vert>-1340 && vert<-840){
+            Serial.println("volume down touched");
+            musicPlayer.pausePlaying(true);
+            delay(10);
+            if (MP3volume < 100){
+              MP3volume=MP3volume+2;
+              tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
+              musicPlayer.setVolume(MP3volume,MP3volume);
+              tft.setCursor(40, 208);
+              tft.setTextColor(textColor);
+              tft.setTextSize(2);
+              tft.print("Volume:    ");
+              tft.setTextColor(textColor);
+              Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
+              tft.print(MP3volume);                 //write volume
+              getLastTouch();
+              delay(50);
+            } else if (MP3volume >= 100){
+                MP3volume = 100;
+                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+                musicPlayer.setVolume(MP3volume,MP3volume);
+                tft.setCursor(40, 208);
+                tft.setTextColor(textColor);
+                tft.setTextSize(2);
+                tft.print("Volume:    ");
+                tft.setTextColor(textColor);
+                tft.print(MP3volume);                 //write volume
+                getLastTouch();
+                delay(50);
+              }
+            musicPlayer.pausePlaying(false);
+          }
+        }
+        if(horz>2900 && horz<3200){                                     //volume up
+          if(vert>-1340 && vert<-840){
+            Serial.println("volume up touched");
+            musicPlayer.pausePlaying(true);
+            delay(10);
+            if (MP3volume > 50){
+              MP3volume=MP3volume-2;
+              tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+              musicPlayer.setVolume(MP3volume,MP3volume);
+              tft.setCursor(40, 208);
+              tft.setTextColor(textColor);
+              tft.setTextSize(2);
+              tft.print("Volume:    ");
+              tft.setTextColor(textColor);
+              Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
+              tft.print(MP3volume);                 //write volume
+              getLastTouch();
+              delay(50);
+            } else if (MP3volume <= 50){
+                MP3volume = 50;
+                tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+                musicPlayer.setVolume(MP3volume,MP3volume);
+                tft.setCursor(40, 208);
+                tft.setTextColor(textColor);
+                tft.setTextSize(2);
+                tft.print("Volume:    ");
+                tft.setTextColor(textColor);
+                tft.print(MP3volume);                 //write volume
+                getLastTouch();
+                delay(50);
+              }
+            musicPlayer.pausePlaying(false);
+          }
+        }
+        if(horz>2430 && horz<2730){                                     //mute
+          if(vert>-1340 && vert<-840){
+            musicPlayer.pausePlaying(true);
+            int lastMP3volume = MP3volume;
+//              delay(50);
+            if(!muted){ 
+              tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+              audioamp.enableChannel(false,false);
+              tft.setCursor(40, 208);
+              tft.setTextColor(textColor);
+              tft.setTextSize(2);
+              tft.print("Volume:    ");
+              tft.setTextColor(textColor);
+              tft.print("MUTED");                 //write volume
+              muted = true;
+              Serial.print ("muted = ");Serial.print(muted);
+              getLastTouch();
+              delay(50);
+          } else if(muted){
+              tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
+              musicPlayer.setVolume(lastMP3volume,lastMP3volume);
+              audioamp.enableChannel(true,true);
+              tft.setCursor(40, 208);
+              tft.setTextColor(textColor);
+              tft.setTextSize(2);
+              tft.print("Volume:    ");
+              tft.setTextColor(textColor);
+              tft.print(MP3volume);                 //write volume
+              muted = false;
+              Serial.print ("muted = ");Serial.print(muted);
+              getLastTouch();
+              delay(50);
+            }
+            musicPlayer.pausePlaying(false);
+          }
+        }
+        if(horz>3370 && horz<3650){                                     //exit to main screen
+          if(vert>-580 && vert<-110){
+            delay(50);
+            musicPlayer.stopPlaying();
+            playMusicState  = STOPPED;
+            ampOff();
+            currentScreen = 3;
+            getLastTouch();
+            delay(50);
+            startMP3Screen();
+          }
+        }
       }
+    }
     }
   }
 
