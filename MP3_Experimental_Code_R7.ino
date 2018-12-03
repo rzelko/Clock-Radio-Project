@@ -186,20 +186,21 @@ void setup(void) {
 void tsControlInt(){
     noInterrupts();
     tftNotTouched = digitalRead(TOUCH_IRQ);
-    Serial.println(tftNotTouched);
+//    Serial.println(tftNotTouched);
 //    delayMicroseconds(2200);
     if (musicPlayer.playingMusic){
       tftNotTouched = digitalRead(TOUCH_IRQ);
       if (tftNotTouched == 1) {
         digitalWrite(VS1053_DCS, LOW);
         digitalWrite(CARDCS, LOW);
-        Serial.println(tftNotTouched);
+//        Serial.println(tftNotTouched);
       }
 
       digitalWrite(VS1053_DCS, HIGH);
       digitalWrite(CARDCS, HIGH);
     //  tftNotTouched = 0;
-      Serial.println(tftNotTouched);
+//      tftNotTouched = digitalRead(TOUCH_IRQ);
+//      Serial.println(tftNotTouched);
     }
     interrupts();
   }
@@ -370,42 +371,7 @@ bool nameCheck(char* name) {
     tft.print(printArtistBuffer);//tft.print(ArtistBufferLength);
   }
   
-//  void playMP3Tracks(){
-//    printMP3Tracks();
-//
-////    musicPlayer.feedBuffer();
-//    musicPlayer.feedBuffer();
-//    if (! musicPlayer.startPlayingFile(nowPlaying)) {
-//          Serial.println("Could not open file: ");Serial.print(nowPlaying);
-//          while (1);
-//    }
-//    Serial.print("Now Playing: ");Serial.println(myAlbum_1_TrackNames[myAlbum_1_Index]);
-//    while (musicPlayer.playingMusic){
-//      if (millis() % 500 == 0){
-//        Serial.println("In While Loop");
-////        controlMP3(); 
-//      }
-////    return;
-//    }
-//
-////    while (musicPlayer.playingMusic){
-////      musicPlayer.feedBuffer();
-////      if (millis() % 500 == 0){
-////        Serial.println("In First Play While Loop");
-//////        if (tftNotTouched=false){
-////          Serial.println("Touch screen is active");
-////          return;
-//////          if(ts.touched()){
-//////          musicPlayer.pausePlaying(true);
-//////          controlMP3();
-//////          musicPlayer.pausePlaying(false); 
-//////        }
-////      //                  controlMP3(); 
-////      }
-////    } 
-//  }
-
- void playMP3Tracks(){
+  void playMP3Tracks(){
     printMP3Tracks();
     musicPlayer.feedBuffer();
     if (! musicPlayer.startPlayingFile(nowPlaying)) {
@@ -434,21 +400,14 @@ bool nameCheck(char* name) {
     }
   }
   
-  void printInLoop(){
-    if (millis() % 1000 == 0){
-      Serial.print(".");
-    }
-  }
+
 
   void controlMP3(){                                                //control MP3 screen
-//    if (millis() % 500 == 0){
-//      Serial.println(F("controlMP3 is active"));
-//    }
-//    
-    tftNotTouched = 0;
+    tftNotTouched = digitalRead(TOUCH_IRQ);
+//    tftNotTouched = 0;
     if (musicPlayer.playingMusic || musicPlayer.stopped() || musicPlayer.paused()) {
 
-      TS_Point p = ts.getPoint();                                   
+      TS_Point p = ts.getPoint();
       DateTime now = rtc.now();                                       //get current time and date
       
     if (millis() % 1000 == 0){
@@ -462,14 +421,7 @@ bool nameCheck(char* name) {
 
     vert = tft.height() - p.x;
     horz = p.y;
-    
-//      Serial.print("X = "); Serial.print(horz);  
-//      Serial.print("\tY = "); Serial.print(vert);
-//      Serial.print("\tPressure = "); Serial.println(p.z);  
-//      Serial.print("Current Screen = "); Serial.println(currentScreen);
-//      Serial.println("MP3 Control");
-//      delay(50);
-      
+     
       p.x = map(p.x, TS_MINY, TS_MAXY, 0, tft.height());              // Scale using the calibration #'s and rotate coordinate system
       p.y = map(p.y, TS_MINX, TS_MAXX, 0, tft.width());
 
@@ -482,21 +434,8 @@ bool nameCheck(char* name) {
           Serial.print(currentTrack); Serial.print("=");
           Serial.println(trackListing[currentTrack]);
           playMusicState = PLAYING;
-//          if (! musicPlayer.startPlayingFile(nowPlaying)) {
-//            Serial.println("Could not open file: ");Serial.print(nowPlaying);
-//            while (1);
-//          } 
-//          Serial.print("Now Playing: ");Serial.println(myAlbum_1_TrackNames[myAlbum_1_Index]);
-//            musicPlayer.startPlayingFile(nowPlaying);
-          
           playMP3Tracks();
           Serial.println("back from function");
-//          while (musicPlayer.playingMusic){
-//            if (millis() % 500 == 0){
-//              Serial.println("In Autoplay While Loop");
-////              controlMP3(); 
-//            }
-//          } 
         }
       }
       
@@ -513,27 +452,8 @@ bool nameCheck(char* name) {
               getLastTouch();
               delay(50);
               musicPlayer.feedBuffer();
-              playMP3Tracks(); //comment out to test if calling the function within controlMP3 prevents interrupt
-//              Serial.println("Back from getLastTouch");
-//              if (!musicPlayer.startPlayingFile(nowPlaying)) {
-//                Serial.println("Could not open file: ");Serial.print(nowPlaying);
-//                while (1);
-//              } 
-//              Serial.print("Now Playing: ");Serial.println(myAlbum_1_TrackNames[myAlbum_1_Index]);
-//              musicPlayer.startPlayingFile(nowPlaying);
+              playMP3Tracks();
               Serial.println("back from function");
-//              while (musicPlayer.playingMusic){
-//                musicPlayer.feedBuffer();
-//                if (millis() % 500 == 0){
-//                  Serial.println("In First Play While Loop");
-//                  if(ts.touched()){
-//                    musicPlayer.pausePlaying(true);
-//                    controlMP3();
-//                    musicPlayer.pausePlaying(false); 
-//                  }
-////                  controlMP3(); 
-//                }
-//              }
             }
           }
           if(horz>2480 && horz<2750){                                   //pause track
@@ -578,7 +498,7 @@ bool nameCheck(char* name) {
 //          }
           if(horz>320 && horz<620){                                    //continuous play button
             if(vert>-2000 && vert<-1580){
-              delay(50);
+              delay(10);
               musicPlayer.pausePlaying(true);
               if (AUTO_PLAY_NEXT == true) {
                   delay(50);
@@ -593,15 +513,16 @@ bool nameCheck(char* name) {
                   }
               musicPlayer.pausePlaying(false);
               getLastTouch();
+//              tftNotTouched = digitalRead(TOUCH_IRQ);
               delay(50);
             }
           }
           if(horz>2900 && horz<3200){                                   //next track
             if(vert>-2000 && vert<-1580){
               delay(50);
-              Serial.println(IRQValue);
               Serial.println("STOPPING");
               musicPlayer.stopPlaying();
+              playMusicState  = STOPPED;
               if(myAlbum_1_Index<12){
                 myAlbum_1_Index ++;
                 nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
@@ -616,6 +537,7 @@ bool nameCheck(char* name) {
               delay(50);
               Serial.println("STOPPING");
               musicPlayer.stopPlaying();
+              playMusicState  = STOPPED;
               if (myAlbum_1_Index>0){
                 myAlbum_1_Index --;
                 nowPlaying = myAlbum_1_Track[myAlbum_1_Index];
@@ -733,6 +655,7 @@ bool nameCheck(char* name) {
             if(vert>-580 && vert<-110){
               delay(50);
               musicPlayer.stopPlaying();
+              playMusicState  = STOPPED;
               ampOff();
               currentScreen = 3;
               getLastTouch();
@@ -745,16 +668,6 @@ bool nameCheck(char* name) {
       }
     }
   }
-  
-  /*boolean debounce(boolean last){                                   //debounce touchscreen touches      
-    boolean current = digitalRead(TOUCH_IRQ);                       //read touchscreen state from interrupt pin
-    if (last != current){
-      delay (5);
-      current = digitalRead(TOUCH_IRQ);
-    }
-    Serial.println("touch debounced");
-    return current;
-  }*/
 
   void regDump() {                                                  //serial print M0 register
     
@@ -870,20 +783,6 @@ TS_Point getLastTouch(){    //In theory, this function should work without the t
     ts.begin();
     return p;
   }
-
-//  TS_Point getLastTouch(){    //In theory, this function should work without the ts.begin(). I'm
-//  //    clearTSBuffer();      //leaving in as-is for future troubleshooting.
-//    currentTouchMillis = millis();
-//    TS_Point p;
-//    if (!ts.bufferEmpty()){
-//      p = ts.getPoint();
-//    }
-//    ts.begin();
-//    if (currentTouchMillis - previousTouchMillis > 2000){
-//        previousTouchMillis = currentTouchMillis;
-//        return p;
-//    } else previousTouchMillis = currentTouchMillis;
-//  }  
 
 //  TS_Point getLastTouch(){    //In theory, this function should work without the ts.begin(). I'm
 //  //    clearTSBuffer();      //leaving in as-is for future troubleshooting.
