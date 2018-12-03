@@ -185,8 +185,9 @@ void setup(void) {
 
 void tsControlInt(){
     noInterrupts();
+    tftNotTouched = digitalRead(TOUCH_IRQ);
     Serial.println(tftNotTouched);
-    delayMicroseconds(2200);
+//    delayMicroseconds(2200);
     if (musicPlayer.playingMusic){
       tftNotTouched = digitalRead(TOUCH_IRQ);
       if (tftNotTouched == 1) {
@@ -194,11 +195,10 @@ void tsControlInt(){
         digitalWrite(CARDCS, LOW);
         Serial.println(tftNotTouched);
       }
-//      tftNotTouched = 0;
-//      delayMicroseconds(2200);
+
       digitalWrite(VS1053_DCS, HIGH);
       digitalWrite(CARDCS, HIGH);
-      tftNotTouched = 0;
+    //  tftNotTouched = 0;
       Serial.println(tftNotTouched);
     }
     interrupts();
@@ -627,10 +627,9 @@ bool nameCheck(char* name) {
           }
           if(horz>3350 && horz<3650){                                   //volume down
             if(vert>-1340 && vert<-840){
-              noInterrupts();
               Serial.println("volume down touched");
               musicPlayer.pausePlaying(true);
-//              delay(50);
+              delay(10);
               if (MP3volume < 100){
                 MP3volume=MP3volume+2;
                 tft.fillRoundRect(160, 202, 60, 25, 6, HX8357_BLACK);
@@ -641,9 +640,7 @@ bool nameCheck(char* name) {
                 tft.print("Volume:    ");
                 tft.setTextColor(textColor);
                 Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
-                noInterrupts();
                 tft.print(MP3volume);                 //write volume
-                interrupts();
                 getLastTouch();
                 delay(50);
               } else if (MP3volume >= 100){
@@ -660,15 +657,13 @@ bool nameCheck(char* name) {
                   delay(50);
                 }
               musicPlayer.pausePlaying(false);
-              interrupts();
             }
           }
           if(horz>2900 && horz<3200){                                     //volume up
             if(vert>-1340 && vert<-840){
-              noInterrupts();
               Serial.println("volume up touched");
               musicPlayer.pausePlaying(true);
-//              delay(50);
+              delay(10);
               if (MP3volume > 50){
                 MP3volume=MP3volume-2;
                 tft.fillRoundRect(160, 202, 80, 25, 6, HX8357_BLACK);
@@ -679,9 +674,7 @@ bool nameCheck(char* name) {
                 tft.print("Volume:    ");
                 tft.setTextColor(textColor);
                 Serial.print("VOLUME IS NOW:   ");Serial.println(MP3volume);
-                noInterrupts();
                 tft.print(MP3volume);                 //write volume
-                interrupts();
                 getLastTouch();
                 delay(50);
               } else if (MP3volume <= 50){
@@ -698,7 +691,6 @@ bool nameCheck(char* name) {
                   delay(50);
                 }
               musicPlayer.pausePlaying(false);
-              interrupts();
             }
           }
           if(horz>2430 && horz<2730){                                     //mute
