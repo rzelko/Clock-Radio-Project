@@ -466,8 +466,11 @@ bool nameCheck(char* name) {
 //          while (1);
     }
     Serial.print("Now Playing: ");Serial.println(myAlbum_1_TrackNames[myAlbum_1_Index]);
-    while (musicPlayer.playingMusic){
-      if (millis() % 1000 == 0){
+    while (musicPlayer.playingMusic || musicPlayer.paused()){
+      noInterrupts();
+      tftNotTouched = digitalRead(TOUCH_IRQ);
+      interrupts();
+      if (millis() % 2000 == 0){
         if (currentMinute != now.minute()){        
           noInterrupts();
           printTime();
@@ -477,7 +480,7 @@ bool nameCheck(char* name) {
       if (millis() % 500 == 0){
         Serial.print(F("In while loop ")); 
         Serial.print("tftNotTouched: ");Serial.println(tftNotTouched);
-        tftNotTouched = digitalRead(TOUCH_IRQ);
+//        tftNotTouched = digitalRead(TOUCH_IRQ);
         if(tftNotTouched == 1){
           controlMP3();
         }
@@ -488,8 +491,9 @@ bool nameCheck(char* name) {
 
 
   void controlMP3(){                                                //control MP3 screen
+    noInterrupts();
     tftNotTouched = digitalRead(TOUCH_IRQ);
-//    tftNotTouched = 0;
+    interrupts();
     if (musicPlayer.playingMusic || musicPlayer.stopped() || musicPlayer.paused()) {
 
       TS_Point p = ts.getPoint();
@@ -534,7 +538,7 @@ bool nameCheck(char* name) {
         }
     }
       
-    if(tftNotTouched == 0 || (musicPlayer.playingMusic && tftNotTouched == 1)){ 
+    if(tftNotTouched == 0 || (musicPlayer.playingMusic && tftNotTouched == 1) || (musicPlayer.paused() && tftNotTouched == 1)){ 
       if (ts.touched()){                                              //if touch is detected
         if(horz>1720 && horz<2280){                                   //play track
           if(vert>-2000 && vert<-1580){
@@ -552,15 +556,15 @@ bool nameCheck(char* name) {
         }
         if(horz>2480 && horz<2750){                                   //pause track
           if(vert>-2000 && vert<-1580){
-            delay(50);
+            delay(10);
             if (!musicPlayer.stopped()) {
               if (musicPlayer.paused()) {
-                delay(50);
+                delay(10);
                 Serial.println("Resumed");
                 musicPlayer.pausePlaying(false);
                 playMusicState  = PLAYING;
               } else { 
-                delay(50);
+                delay(10);
                 Serial.println("Paused");
                 musicPlayer.pausePlaying(true);
                 playMusicState = PAUSED;
@@ -592,6 +596,9 @@ bool nameCheck(char* name) {
             } else { 
               delay(50);
               SHUFFLE_PLAY = true;
+              AUTO_PLAY_NEXT = true;
+              Serial.println("Continuous Play ON");
+              tft.drawBitmap(25,135, imageContPlay, 40, 40, HX8357_GREEN);
               Serial.println("Shuffle Play ON");
               tft.drawBitmap(85, 135, imageShuffle, 40, 40, HX8357_GREEN);
               }
@@ -600,16 +607,24 @@ bool nameCheck(char* name) {
             delay(50);
           }
         }
-        if(horz>320 && horz<620){                                    //continuous play button
+ if(horz>320 && horz<620){                                    //continuous play button
           if(vert>-2000 && vert<-1580){
             delay(10);
             musicPlayer.pausePlaying(true);
-            if (AUTO_PLAY_NEXT == true) {
+            if (AUTO_PLAY_NEXT == true && SHUFFLE_PLAY == false) {
                 delay(50);
                 AUTO_PLAY_NEXT = false;
                 Serial.println("Continuous Play OFF");
                 tft.drawBitmap(25,135, imageContPlay, 40, 40, textColor);
-              } else { 
+            } else if (AUTO_PLAY_NEXT == true && SHUFFLE_PLAY == true){
+                delay(50);
+                AUTO_PLAY_NEXT = false;
+                SHUFFLE_PLAY = false;
+                Serial.println("Continuous Play OFF");
+                Serial.println("Shuffle Play OFF");
+                tft.drawBitmap(85, 135, imageShuffle, 40, 40, textColor);
+                tft.drawBitmap(25,135, imageContPlay, 40, 40, textColor);               
+            } else { 
                 delay(50);
                 AUTO_PLAY_NEXT = true;
                 Serial.println("Continuous Play ON");
@@ -620,6 +635,7 @@ bool nameCheck(char* name) {
             delay(50);
           }
         }
+
         if(horz>2900 && horz<3200){                                   //next track
           if(vert>-2000 && vert<-1580){
             delay(50);
@@ -988,6 +1004,7 @@ void loop() {
   } 
   switch (currentScreen){
       case 3:
+        tftNotTouched = digitalRead(TOUCH_IRQ);
         controlMP3();
           
   }
